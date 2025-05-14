@@ -1,5 +1,8 @@
 pub mod terminal {
-    use crossterm::terminal::{self};
+    use crossterm::{
+        style::Print,
+        terminal::{self},
+    };
 
     pub struct Terminal {
         pub columns: u16,
@@ -19,6 +22,7 @@ pub mod terminal {
             let mut stdout = stdout();
 
             // clear screen
+            execute!(stdout, Print("\r\n")).unwrap();
             execute!(stdout, Clear(ClearType::All)).unwrap();
         } // Terminal::clear_terminal()
 
@@ -36,18 +40,20 @@ pub mod terminal {
         pub fn close() {
             use crossterm::execute;
             use crossterm::style::Color;
-            use crossterm::style::Print;
             use crossterm::style::SetBackgroundColor;
             use std::io::stdout;
 
             let mut stdout = stdout();
 
-            execute!(stdout, Print("\r\n")).unwrap();
             execute!(stdout, SetBackgroundColor(Color::Rgb { r: 0, g: 0, b: 0 })).unwrap();
 
             Terminal::clear_terminal();
 
             crossterm::terminal::disable_raw_mode().unwrap();
         } // Terminal::close()
+
+        pub fn update(&mut self) {
+            Terminal::clear_terminal();
+        }
     } // Terminal{}
 } // terminal
