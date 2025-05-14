@@ -1,6 +1,10 @@
 pub mod terminal {
+    use crossterm::terminal::{self};
 
-    pub struct Terminal;
+    pub struct Terminal {
+        pub columns: u16,
+        pub rows: u16,
+    }
 
     impl Terminal {
         fn init() {
@@ -20,7 +24,13 @@ pub mod terminal {
 
         pub fn new() -> Self {
             Terminal::init();
-            Terminal {}
+
+            let window_size = terminal::window_size().unwrap();
+
+            Terminal {
+                columns: window_size.columns,
+                rows: window_size.rows,
+            }
         } // Terminal::new()
 
         pub fn close() {
