@@ -12,9 +12,9 @@ pub mod events {
                 }
                 Event::FocusLost => {}
                 Event::FocusGained => {}
-                Event::Mouse(event) => {}
-                Event::Paste(data) => {}
-                Event::Resize(width, height) => {}
+                Event::Mouse(_) => {}
+                Event::Paste(_) => {}
+                Event::Resize(_, _) => {}
             }
         }
     }

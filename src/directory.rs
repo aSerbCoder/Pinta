@@ -1,6 +1,6 @@
 pub mod directory {
-    use std::path::PathBuf;
-    use std::process::Command;
+    use std::env;
+    use std::path::{Path, PathBuf};
 
     pub struct Directory {
         pub cur_dir: PathBuf,
@@ -8,21 +8,16 @@ pub mod directory {
 
     impl Directory {
         fn init_directory() -> PathBuf {
-            let cur_dir = Command::new("pwd")
-                .output()
-                .expect("Failed to get current directory");
-
-            let cur_dir_as_string = String::from_utf8(cur_dir.stdout)
-                .expect("Invalid UTF-8 output from pwd")
-                .trim()
-                .to_string();
-
-            PathBuf::from(cur_dir_as_string)
+            env::current_dir().expect("Failed to get current directory")
         }
 
         pub fn new() -> Self {
             let cur_dir = Directory::init_directory();
             Directory { cur_dir }
+        }
+
+        pub fn path(&self) -> &Path {
+            &self.cur_dir
         }
     }
 }
