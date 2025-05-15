@@ -19,6 +19,7 @@ pub mod app {
         pub vertical_scroll: usize,
         pub vertical_scroll_state: ScrollbarState,
         pub selected: usize,
+        pub show_hidden: bool,
     } // App{}
 
     impl App {
@@ -29,6 +30,7 @@ pub mod app {
                 vertical_scroll: 0,
                 vertical_scroll_state: ScrollbarState::default(),
                 selected: 0,
+                show_hidden: false,
             }
         }
 
@@ -85,10 +87,16 @@ pub mod app {
                 .dir_contents
                 .iter()
                 .enumerate()
-                .map(|(i, entry)| {
+                .filter_map(|(i, entry)| {
                     let entry_str = entry.file_name().to_string_lossy().to_string();
 
-                    if i == self.selected {
+                    // If show_hidden is false and the entry is a hidden file, skip it
+                    if !self.show_hidden && entry_str.starts_with('.') {
+                        return None; // Skip this entry
+                    }
+
+                    // Create the line for this entry
+                    let line = if i == self.selected {
                         // Selected line: different background color
                         Line::from(Span::styled(
                             entry_str,
@@ -97,7 +105,9 @@ pub mod app {
                     } else {
                         // Normal line
                         Line::from(entry_str)
-                    }
+                    };
+
+                    Some(line) // Return the line wrapped in Some
                 })
                 .collect();
 
@@ -151,6 +161,19 @@ pub mod app {
                     } else {
                         self.selected = self.directory.dir_contents.len() - 1;
                     }
+                }
+                KeyCode::Char('h') => {
+                    self.selected = 0;
+                    self.directory.prev_directory();
+                }
+                KeyCode::Char('a') => {
+                    self.show_hidden = !self.show_hidden;
+                }
+                KeyCode::Char('l') => {
+                    let selected = self.selected;
+                    self.selected = 0;
+                    self.directory
+                        .next_directory(self.directory.dir_contents[selected].path().as_ref());
                 }
                 _ => {}
             }

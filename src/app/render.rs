@@ -7,8 +7,8 @@ pub mod renders {
         layout::Rect,
         style::Stylize,
         symbols::border,
-        text::{Line, Span, Text},
-        widgets::{Block, Paragraph, Scrollbar, ScrollbarOrientation, Widget},
+        text::{Line, Text},
+        widgets::{Block, Paragraph, Widget},
     };
 
     impl Widget for &App {
@@ -16,9 +16,13 @@ pub mod renders {
             let title = Line::from("  Pinta  ".bold());
             let instructions = Line::from(vec![
                 " Up ".into(),
-                "▲".blue().bold(),
+                "<K>".blue().bold(),
                 " Down ".into(),
-                "▼".blue().bold(),
+                "<J>".blue().bold(),
+                " Back ".into(),
+                "<H>".blue().bold(),
+                " Forward ".into(),
+                "<L>".blue().bold(),
                 " Quit ".into(),
                 "<Q> ".blue().bold(),
             ]);
