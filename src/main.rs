@@ -1,10 +1,13 @@
-use events::events::running;
-mod directory;
-mod events;
-mod state;
-mod terminal;
-mod ui;
+use app::app::App;
+use std::io;
 
-fn main() {
-    running();
+mod directory;
+
+mod app;
+
+fn main() -> io::Result<()> {
+    let mut terminal = ratatui::init();
+    let app_result = App::new().run(&mut terminal);
+    ratatui::restore();
+    app_result
 }
