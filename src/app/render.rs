@@ -23,6 +23,10 @@ pub mod renders {
                 "<H>".blue().bold(),
                 " Forward ".into(),
                 "<L>".blue().bold(),
+                " Enter ".into(),
+                "<CR> ".blue().bold(),
+                " Show hidden ".into(),
+                "<A> ".blue().bold(),
                 " Quit ".into(),
                 "<Q> ".blue().bold(),
             ]);

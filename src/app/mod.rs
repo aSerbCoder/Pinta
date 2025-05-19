@@ -44,6 +44,7 @@ pub mod app {
 
         fn list_dir_contents(&self, frame: &mut Frame) {
             let full_area = frame.area();
+            let back_color = Color::Rgb(29, 71, 105);
 
             // Step 1: Vertical layout — more space for the middle chunk (scroll area)
             let vertical_chunks = Layout::default()
@@ -79,7 +80,7 @@ pub mod app {
             // Block with THICK border and blue background
             let block = Block::bordered()
                 .border_type(BorderType::Thick)
-                .style(Style::default().bg(Color::DarkGray))
+                .style(Style::default().bg(back_color))
                 .title(title.bold().white());
             // Build content
             let dir_contents: Vec<Line> = self
@@ -115,7 +116,7 @@ pub mod app {
             let paragraph = Paragraph::new(Text::from(dir_contents))
                 .block(block)
                 .scroll((self.vertical_scroll as u16, 0))
-                .style(Style::default().bg(Color::DarkGray).fg(Color::White));
+                .style(Style::default().bg(back_color).fg(Color::White));
 
             // Render paragraph
             frame.render_widget(paragraph, content_area);
@@ -164,16 +165,21 @@ pub mod app {
                 }
                 KeyCode::Char('h') => {
                     self.selected = 0;
-                    self.directory.prev_directory();
+                    self.directory.prev_directory(self.show_hidden);
                 }
                 KeyCode::Char('a') => {
+                    self.selected = 0;
                     self.show_hidden = !self.show_hidden;
+                    self.directory.dir_contents =
+                        Directory::directory_contents(&self.directory.cur_dir, self.show_hidden);
                 }
                 KeyCode::Char('l') => {
                     let selected = self.selected;
                     self.selected = 0;
-                    self.directory
-                        .next_directory(self.directory.dir_contents[selected].path().as_ref());
+                    self.directory.next_directory(
+                        self.directory.dir_contents[selected].path().as_ref(),
+                        self.show_hidden,
+                    );
                 }
                 _ => {}
             }
