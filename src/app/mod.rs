@@ -11,7 +11,7 @@ pub mod app {
         widgets::{Block, BorderType, Paragraph, Scrollbar, ScrollbarOrientation, ScrollbarState},
     };
 
-    use crate::directory::directory::Directory;
+    use crate::{commands::commands, directory::directory::Directory};
 
     pub struct App {
         pub exit: bool,
@@ -180,6 +180,9 @@ pub mod app {
                         self.directory.dir_contents[selected].path().as_ref(),
                         self.show_hidden,
                     );
+                }
+                KeyCode::Enter => {
+                    commands::enter_in_tmux(self.directory.path());
                 }
                 _ => {}
             }
