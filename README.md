@@ -1,5 +1,8 @@
 # Pinta
 
+![Screenshot 2025-05-24 at 1 27 36 AM](https://github.com/user-attachments/assets/15746f4a-6745-4209-962e-fe48e461c2aa)
+
+
 Pinta is a small project I have been working on for a number of reasons..
 
 - Wanted to get around directories fast in terminal
