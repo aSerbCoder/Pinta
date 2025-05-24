@@ -175,13 +175,17 @@ pub mod app {
                 }
                 KeyCode::Char('l') => {
                     let selected = self.selected;
-                    self.selected = 0;
-                    self.directory.next_directory(
+                    let is_valid_dir = self.directory.next_directory(
                         self.directory.dir_contents[selected].path().as_ref(),
                         self.show_hidden,
                     );
+                    if is_valid_dir {
+                        self.selected = 0;
+                    }
                 }
                 KeyCode::Enter => {
+                    self.exit();
+                    ratatui::restore();
                     commands::enter_in_tmux(self.directory.path());
                 }
                 _ => {}

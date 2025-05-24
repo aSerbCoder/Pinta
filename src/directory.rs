@@ -1,7 +1,7 @@
 pub mod directory {
-    use std::env;
-    use std::fs::DirEntry;
+    use std::fs::{self, DirEntry, metadata};
     use std::path::{Path, PathBuf};
+    use std::{env, error, io};
 
     pub struct Directory {
         pub cur_dir: PathBuf,
@@ -38,10 +38,16 @@ pub mod directory {
             self.dir_contents = Directory::directory_contents(&self.cur_dir, show_hidden);
         }
 
-        pub fn next_directory(&mut self, path: &Path, show_hidden: bool) {
+        pub fn next_directory(&mut self, path: &Path, show_hidden: bool) -> bool {
+            let metadata = metadata(path).unwrap();
+            if !metadata.is_dir() {
+                return false;
+            }
             env::set_current_dir(path).unwrap();
             self.cur_dir = env::current_dir().expect("Failed getting current directory");
             self.dir_contents = Directory::directory_contents(&self.cur_dir, show_hidden);
+
+            return true;
         }
 
         pub fn new() -> Self {

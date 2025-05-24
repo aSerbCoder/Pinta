@@ -2,7 +2,7 @@ pub mod commands {
     use std::{path::Path, process::Command};
 
     pub fn enter_in_tmux(path: &Path) {
-        let session_name = "test";
+        let session_name = path.file_name().unwrap().to_str().unwrap();
         let path_str = path.to_str().expect("Invalid path");
         let status = Command::new("tmux")
             .args(&[
