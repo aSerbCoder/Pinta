@@ -13,4 +13,8 @@ Pinta is a small project I have been working on for a number of reasons..
 - Fzf for directories (config with specific depth searching)
 - Better error handling
 
+## Version 2.0
+
+The idea of Version 2.0 is to create an API rewrite, to transform this idea from a small-scaling project into a well-organized model.
+
 All in all, this project has a decent way to go still.

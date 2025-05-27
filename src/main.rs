@@ -1,8 +1,5 @@
-use app::app::App;
+use app::App;
 use std::io;
-
-mod commands;
-mod directory;
 
 mod app;
 
