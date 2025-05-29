@@ -2,6 +2,8 @@ pub mod handler;
 use ratatui::{DefaultTerminal, Frame};
 use std::io;
 
+use crate::ui;
+
 /// Stores Pinta's current state.
 ///
 /// # Fields
@@ -28,15 +30,17 @@ impl App {
     pub fn run(&mut self, terminal: &mut DefaultTerminal) -> io::Result<()> {
         while !self.exit {
             terminal.draw(|frame| self.draw(frame))?;
-            self::handler::handle_events(self)?;
+            handler::handle_events(self)?;
         }
         Ok(())
     } // App::run()
 
-    fn draw(&self, _frame: &mut Frame) {
-        todo!()
+    /// The function that calls [`crate::ui`].
+    fn draw(&mut self, _frame: &mut Frame) {
+        ui::layout::draw_layout(self, _frame);
     }
 
+    /// The exit function of the application
     fn exit(&mut self) {
         self.exit = true;
     } // App::exit()

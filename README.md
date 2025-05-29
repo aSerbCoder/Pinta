@@ -17,4 +17,6 @@ Pinta is a small project I have been working on for a number of reasons..
 
 The idea of Version 2.0 is to create an API rewrite, to transform this idea from a small-scaling project into a well-organized model.
 
+- Solid documentation for the first time
+
 All in all, this project has a decent way to go still.
