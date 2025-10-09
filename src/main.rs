@@ -1,6 +1,7 @@
 use app::app::App;
 use color_eyre::Result;
 mod app;
+mod paths;
 mod ui;
 
 fn main() -> Result<()> {
