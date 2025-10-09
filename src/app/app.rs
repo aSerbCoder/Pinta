@@ -25,6 +25,14 @@ pub struct App {
     pub show_help: bool,
     pub selected_tab: usize, // 0 or 1
 
+    pub search_matches: Vec<usize>,
+    pub search_match_index: Option<usize>,
+
+    pub searched_string: String,
+    pub searching: bool,
+
+    pub last_search_update: Option<Instant>,
+
     // help scroller
     pub help_selected_line: usize,
     pub help_scroll: usize,
@@ -69,6 +77,8 @@ impl App {
                 if let Event::Key(key) = event::read()? {
                     if self.show_help {
                         self.key_handler_help(key);
+                    } else if self.searching {
+                        self.key_handler_searching(key);
                     } else {
                         match self.selected_tab {
                             0 => self.key_handler_directories(key),
@@ -99,6 +109,8 @@ impl App {
             }
 
             KeyCode::Char('2') => self.selected_tab = 1,
+
+            KeyCode::Char('/') => self.searching = true,
 
             KeyCode::Char('j') | KeyCode::Down => {
                 if self.directories_total_lines > 0 {
@@ -145,8 +157,24 @@ impl App {
                 }
             }
 
+            KeyCode::Char('n') => {
+                if !self.search_matches.is_empty() {
+                    self.jump_to_next_match();
+                }
+            }
+            KeyCode::Char('N') => {
+                if !self.search_matches.is_empty() {
+                    self.jump_to_prev_match();
+                }
+            }
+
             KeyCode::Char('h') | KeyCode::Left => {
                 if let Some(parent) = self.current_directory.parent() {
+                    self.search_matches = Vec::new();
+                    self.search_match_index = None;
+                    self.searched_string = String::new();
+                    self.last_search_update = Some(Instant::now());
+
                     self.current_directory = parent.to_path_buf();
                     self.current_directory_contents =
                         get_current_directory_contents(self.current_directory.as_path());
@@ -159,6 +187,11 @@ impl App {
                 let selected_path =
                     &self.current_directory_contents[self.directories_selected_line];
                 if selected_path.is_dir() {
+                    self.search_matches = Vec::new();
+                    self.search_match_index = None;
+                    self.searched_string = String::new();
+                    self.last_search_update = Some(Instant::now());
+
                     self.current_directory
                         .push(selected_path.file_name().unwrap());
                     self.current_directory_contents =
@@ -323,9 +356,109 @@ impl App {
         }
     }
 
+    fn key_handler_searching(&mut self, key: KeyEvent) {
+        match key.code {
+            KeyCode::Esc => {
+                self.searching = false;
+                self.searched_string.clear();
+                self.search_matches.clear();
+                self.search_match_index = None;
+            }
+
+            KeyCode::Char(c) => {
+                if !c.is_control() && !c.is_whitespace() {
+                    self.searched_string.push(c);
+
+                    self.last_search_update = Some(Instant::now());
+                    self.update_search_results();
+                }
+            }
+
+            KeyCode::Backspace => {
+                self.searched_string.pop();
+                self.last_search_update = Some(Instant::now());
+                self.update_search_results();
+            }
+
+            KeyCode::Enter => {
+                self.last_search_update = Some(Instant::now());
+                self.searching = false;
+            }
+
+            _ => {}
+        }
+    }
+
+    fn update_search_results(&mut self) {
+        self.search_matches.clear();
+        self.search_match_index = None;
+
+        if self.searched_string.is_empty() {
+            return;
+        }
+
+        let query = self.searched_string.to_lowercase();
+
+        for (i, path) in self.current_directory_contents.iter().enumerate() {
+            if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
+                if name.to_lowercase().contains(&query) {
+                    self.search_matches.push(i);
+                }
+            }
+        }
+
+        if !self.search_matches.is_empty() {
+            self.search_match_index = Some(0);
+            self.directories_selected_line = self.search_matches[0];
+            self.ensure_selected_visible();
+        }
+    }
+
     fn initalize_state(&mut self) {
         self.current_directory = get_current_directory_name();
         self.current_directory_contents =
             get_current_directory_contents(self.current_directory.as_path());
+    }
+
+    fn jump_to_next_match(&mut self) {
+        if self.search_matches.is_empty() {
+            return;
+        }
+
+        let next_index = match self.search_match_index {
+            Some(i) => (i + 1) % self.search_matches.len(),
+            None => 0,
+        };
+
+        self.search_match_index = Some(next_index);
+        self.directories_selected_line = self.search_matches[next_index];
+        self.ensure_selected_visible();
+    }
+
+    fn jump_to_prev_match(&mut self) {
+        if self.search_matches.is_empty() {
+            return;
+        }
+
+        let prev_index = match self.search_match_index {
+            Some(0) | None => self.search_matches.len() - 1,
+            Some(i) => i - 1,
+        };
+
+        self.search_match_index = Some(prev_index);
+        self.directories_selected_line = self.search_matches[prev_index];
+        self.ensure_selected_visible();
+    }
+
+    fn ensure_selected_visible(&mut self) {
+        if self.directories_selected_line < self.directories_scroll {
+            self.directories_scroll = self.directories_selected_line;
+        } else if self.directories_selected_line
+            >= self.directories_scroll + self.directories_visible_height
+        {
+            self.directories_scroll = self
+                .directories_selected_line
+                .saturating_sub(self.directories_visible_height - 1);
+        }
     }
 }

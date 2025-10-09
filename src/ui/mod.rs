@@ -1,15 +1,14 @@
 use ratatui::{
     Frame,
-    layout::{Alignment, Constraint, Direction, Layout, Rect},
-    style::{Color, Modifier, Style},
-    widgets::{Block, BorderType, Borders, Clear, Paragraph, Row, Table},
+    layout::{Alignment, Constraint, Layout, Rect},
+    style::{Color, Style},
+    widgets::{Block, Borders},
 };
 
 use crate::app::app::App;
 
 mod directories;
 mod help;
-mod title;
 mod tmux;
 
 pub fn draw(app: &mut App, frame: &mut Frame) {

@@ -2,7 +2,7 @@ use std::io::Read;
 use std::process::Command;
 use std::{path::Path, process::Stdio};
 
-use chrono::{DateTime, Local, NaiveDateTime, Utc};
+use chrono::{DateTime, Local, Utc};
 
 #[derive(Default, Debug)]
 pub struct TmuxWindow {
