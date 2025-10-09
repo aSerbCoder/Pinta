@@ -22,7 +22,15 @@ use crate::{
 
 #[derive(Default)]
 pub struct App {
+    pub show_help: bool,
     pub selected_tab: usize, // 0 or 1
+
+    // help scroller
+    pub help_selected_line: usize,
+    pub help_scroll: usize,
+    pub help_total_lines: usize,
+    pub help_visible_height: usize,
+    pub help_scroll_state: ScrollbarState,
 
     // Tab 0 scroller
     pub directories_selected_line: usize,
@@ -59,10 +67,14 @@ impl App {
 
             if event::poll(timeout)? {
                 if let Event::Key(key) = event::read()? {
-                    match self.selected_tab {
-                        0 => self.key_handler_directories(key),
-                        1 => self.key_handler_tmux(key),
-                        _ => {}
+                    if self.show_help {
+                        self.key_handler_help(key);
+                    } else {
+                        match self.selected_tab {
+                            0 => self.key_handler_directories(key),
+                            1 => self.key_handler_tmux(key),
+                            _ => {}
+                        }
                     }
                 }
             }
@@ -81,6 +93,9 @@ impl App {
         match key.code {
             KeyCode::Char('q') => {
                 self.exit = true;
+            }
+            KeyCode::Char('H') => {
+                self.show_help = !self.show_help;
             }
 
             KeyCode::Char('2') => self.selected_tab = 1,
@@ -131,7 +146,6 @@ impl App {
             }
 
             KeyCode::Char('h') | KeyCode::Left => {
-                // reset a few things
                 if let Some(parent) = self.current_directory.parent() {
                     self.current_directory = parent.to_path_buf();
                     self.current_directory_contents =
@@ -176,6 +190,9 @@ impl App {
         match key.code {
             KeyCode::Char('q') => {
                 self.exit = true;
+            }
+            KeyCode::Char('H') => {
+                self.show_help = !self.show_help;
             }
 
             KeyCode::Char('1') => self.selected_tab = 0,
@@ -249,6 +266,56 @@ impl App {
                     }
 
                     self.exit = true;
+                }
+            }
+
+            _ => {}
+        }
+    }
+
+    fn key_handler_help(&mut self, key: KeyEvent) {
+        match key.code {
+            KeyCode::Char('q') | KeyCode::Char('H') => {
+                self.show_help = !self.show_help;
+                return;
+            }
+
+            KeyCode::Char('j') | KeyCode::Down => {
+                if self.help_total_lines > 0 {
+                    let prev_line = self.help_selected_line;
+                    self.help_selected_line = (self.help_selected_line + 1) % self.help_total_lines;
+
+                    if self.help_selected_line == 0 && prev_line == self.help_total_lines - 1 {
+                        self.help_scroll = 0;
+                    } else if self.help_selected_line >= self.help_scroll + self.help_visible_height
+                    {
+                        self.help_scroll = self.help_scroll.saturating_add(1);
+                    }
+                }
+            }
+
+            KeyCode::Char('k') | KeyCode::Up => {
+                if self.help_total_lines > 0 {
+                    let prev_line = self.help_selected_line;
+                    if self.help_selected_line == 0 {
+                        self.help_selected_line = self.help_total_lines - 1;
+                        self.help_scroll = self
+                            .help_total_lines
+                            .saturating_sub(self.help_visible_height)
+                            .min(self.help_total_lines.saturating_sub(1));
+                    } else {
+                        self.help_selected_line -= 1;
+                        if self.help_selected_line < self.help_scroll {
+                            self.help_scroll = self.help_scroll.saturating_sub(1);
+                        }
+                    }
+
+                    if prev_line == 0 && self.help_selected_line == self.help_total_lines - 1 {
+                        self.help_scroll = self
+                            .help_total_lines
+                            .saturating_sub(self.help_visible_height)
+                            .min(self.help_total_lines.saturating_sub(1));
+                    }
                 }
             }
 
