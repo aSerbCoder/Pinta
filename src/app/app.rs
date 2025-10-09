@@ -101,12 +101,36 @@ impl App {
                 }
             }
 
+            KeyCode::Char('h') | KeyCode::Left => {
+                // reset a few things
+                if let Some(parent) = self.current_directory.parent() {
+                    self.current_directory = parent.to_path_buf();
+                    self.current_directory_contents =
+                        get_current_directory_contents(self.current_directory.as_path());
+                    self.selected_line = 0;
+                    self.vertical_scroll = 0;
+                }
+            }
+
+            KeyCode::Char('l') | KeyCode::Right => {
+                let selected_path = &self.current_directory_contents[self.selected_line];
+                if selected_path.is_dir() {
+                    self.current_directory
+                        .push(selected_path.file_name().unwrap());
+                    self.current_directory_contents =
+                        get_current_directory_contents(&self.current_directory);
+                    self.selected_line = 0;
+                    self.vertical_scroll = 0;
+                }
+            }
+
             _ => {}
         }
     }
 
     fn initalize_state(&mut self) {
         self.current_directory = get_current_directory_name();
-        self.current_directory_contents = get_current_directory_contents()
+        self.current_directory_contents =
+            get_current_directory_contents(self.current_directory.as_path());
     }
 }
