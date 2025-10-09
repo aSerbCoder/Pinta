@@ -7,6 +7,7 @@ use crate::app::app::App;
 mod directories;
 mod help;
 mod title;
+mod tmux;
 
 pub fn draw(app: &mut App, frame: &mut Frame) {
     let area = frame.area();
@@ -21,5 +22,6 @@ pub fn draw(app: &mut App, frame: &mut Frame) {
 
     title::draw(app, frame, chunks[0]);
     directories::draw(app, frame, chunks[1]);
+    tmux::draw(app, frame, chunks[2]);
     help::draw(app, frame, chunks[3]);
 }
