@@ -75,6 +75,7 @@ pub fn enter_in_tmux(path: &Path) {
 pub fn list_tmux_sessions() -> Vec<TmuxSession> {
     let mut sessions_child = Command::new("tmux")
         .args(&["list-sessions", "-F", "#{session_name}:#{session_created}"])
+        .stderr(Stdio::null())
         .stdout(Stdio::piped())
         .spawn()
         .expect("Failed to run tmux list-sessions");
