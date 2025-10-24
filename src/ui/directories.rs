@@ -1,7 +1,7 @@
 use crate::app::app::App;
 use ratatui::{
     Frame,
-    layout::Rect,
+    layout::{Alignment, Rect},
     style::{Color, Modifier, Style},
     text::{Line, Span, Text},
     widgets::{Block, Borders, Paragraph, Scrollbar, ScrollbarOrientation},
@@ -121,7 +121,7 @@ pub fn draw(app: &mut App, frame: &mut Frame, area: Rect) {
             .map(|t| t.elapsed() < Duration::from_secs(2))
             .unwrap_or(false);
 
-    if show_popup && !app.searched_string.is_empty() {
+    if show_popup {
         let total_matches = app.search_matches.len();
         let current_index = app.search_match_index.map(|i| i + 1).unwrap_or(0);
 
@@ -141,12 +141,15 @@ pub fn draw(app: &mut App, frame: &mut Frame, area: Rect) {
             format!("/{ }  (no matches)", app.searched_string)
         };
 
-        let popup_width = (status_text.len() as u16 + 4).min(area.width.saturating_sub(4));
+        // --- Center the popup ---
+        let popup_width = (status_text.len() as u16 + 6).min(area.width.saturating_sub(4));
+        let popup_height = 3;
+
         let popup_area = Rect {
-            x: area.x + 2,
-            y: area.y + area.height.saturating_sub(3),
+            x: area.x + (area.width.saturating_sub(popup_width)) / 2,
+            y: area.y + (area.height.saturating_sub(popup_height)) / 2,
             width: popup_width,
-            height: 3,
+            height: popup_height,
         };
 
         let popup = Paragraph::new(status_text)
@@ -155,7 +158,8 @@ pub fn draw(app: &mut App, frame: &mut Frame, area: Rect) {
                 Block::default()
                     .borders(Borders::ALL)
                     .border_style(Style::default().fg(Color::Cyan))
-                    .title(" Search "),
+                    .title(" Search ")
+                    .title_alignment(Alignment::Center),
             );
 
         frame.render_widget(popup, popup_area);

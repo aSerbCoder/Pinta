@@ -25,6 +25,8 @@ pub struct App {
     pub show_help: bool,
     pub selected_tab: usize, // 0 or 1
 
+    pub show_hidden: bool,
+
     pub search_matches: Vec<usize>,
     pub search_match_index: Option<usize>,
 
@@ -32,6 +34,7 @@ pub struct App {
     pub searching: bool,
 
     pub last_search_update: Option<Instant>,
+    pub help_selected_tab: usize,
 
     // help scroller
     pub help_selected_line: usize,
@@ -110,7 +113,14 @@ impl App {
 
             KeyCode::Char('2') => self.selected_tab = 1,
 
-            KeyCode::Char('/') => self.searching = true,
+            KeyCode::Char('/') => {
+                self.searching = true;
+                self.searched_string.clear();
+                self.search_matches.clear();
+                self.search_match_index = None;
+                self.last_search_update = Some(Instant::now());
+                self.update_search_results();
+            }
 
             KeyCode::Char('j') | KeyCode::Down => {
                 if self.directories_total_lines > 0 {
@@ -162,6 +172,20 @@ impl App {
                     self.jump_to_next_match();
                 }
             }
+
+            KeyCode::Char('A') => {
+                self.show_hidden = !self.show_hidden;
+                self.search_matches = Vec::new();
+                self.search_match_index = None;
+                self.searched_string = String::new();
+                self.current_directory_contents = get_current_directory_contents(
+                    self.current_directory.as_path(),
+                    self.show_hidden,
+                );
+                self.directories_selected_line = 0;
+                self.directories_scroll = 0;
+            }
+
             KeyCode::Char('N') => {
                 if !self.search_matches.is_empty() {
                     self.jump_to_prev_match();
@@ -173,11 +197,11 @@ impl App {
                     self.search_matches = Vec::new();
                     self.search_match_index = None;
                     self.searched_string = String::new();
-                    self.last_search_update = Some(Instant::now());
-
                     self.current_directory = parent.to_path_buf();
-                    self.current_directory_contents =
-                        get_current_directory_contents(self.current_directory.as_path());
+                    self.current_directory_contents = get_current_directory_contents(
+                        self.current_directory.as_path(),
+                        self.show_hidden,
+                    );
                     self.directories_selected_line = 0;
                     self.directories_scroll = 0;
                 }
@@ -190,18 +214,17 @@ impl App {
                     self.search_matches = Vec::new();
                     self.search_match_index = None;
                     self.searched_string = String::new();
-                    self.last_search_update = Some(Instant::now());
 
                     self.current_directory
                         .push(selected_path.file_name().unwrap());
                     self.current_directory_contents =
-                        get_current_directory_contents(&self.current_directory);
+                        get_current_directory_contents(&self.current_directory, self.show_hidden);
                     self.directories_selected_line = 0;
                     self.directories_scroll = 0;
                 }
             }
 
-            KeyCode::Enter => {
+            KeyCode::Char('t') => {
                 terminal::disable_raw_mode().expect("Could not disable raw mode");
                 crossterm::execute!(std::io::stdout(), crossterm::terminal::LeaveAlternateScreen)
                     .expect("Could not leave alternate screen");
@@ -285,7 +308,7 @@ impl App {
                 }
             }
 
-            KeyCode::Enter => {
+            KeyCode::Char('t') => {
                 if !self.tmux_sessions.is_empty() {
                     terminal::disable_raw_mode().expect("Could not disable raw mode");
                     crossterm::execute!(
@@ -349,6 +372,26 @@ impl App {
                             .saturating_sub(self.help_visible_height)
                             .min(self.help_total_lines.saturating_sub(1));
                     }
+                }
+            }
+
+            KeyCode::Char('1') => self.help_selected_tab = 0,
+            KeyCode::Char('2') => self.help_selected_tab = 1,
+            KeyCode::Char('3') => self.help_selected_tab = 2,
+            KeyCode::Char('4') => self.help_selected_tab = 3,
+
+            KeyCode::Char('h') => {
+                if self.help_selected_tab == 0 {
+                    self.help_selected_tab = 3;
+                } else {
+                    self.help_selected_tab -= 1;
+                }
+            }
+            KeyCode::Char('l') => {
+                if self.help_selected_tab == 3 {
+                    self.help_selected_tab = 0;
+                } else {
+                    self.help_selected_tab += 1;
                 }
             }
 
@@ -417,7 +460,7 @@ impl App {
     fn initalize_state(&mut self) {
         self.current_directory = get_current_directory_name();
         self.current_directory_contents =
-            get_current_directory_contents(self.current_directory.as_path());
+            get_current_directory_contents(self.current_directory.as_path(), self.show_hidden);
     }
 
     fn jump_to_next_match(&mut self) {
